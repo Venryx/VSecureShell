@@ -5,12 +5,12 @@
 'use strict';
 
 lib.rtdep('lib.f',
-          'hterm');
+					'hterm');
 
 // CSP means that we can't kick off the initialization from the html file,
 // so we do it like this instead.
 window.onload = function() {
-  lib.init(Crosh.init);
+	lib.init(Crosh.init);
 };
 
 /**
@@ -24,10 +24,10 @@ window.onload = function() {
  * @param {Object} argv The argument object passed in from the Terminal.
  */
 function Crosh(argv) {
-  this.argv_ = argv;
-  this.io = null;
-  this.keyboard_ = null;
-  this.pid_ = -1;
+	this.argv_ = argv;
+	this.io = null;
+	this.keyboard_ = null;
+	this.pid_ = -1;
 };
 
 /**
@@ -46,30 +46,30 @@ Crosh.croshBuiltinId = 'nkoccljplnhpfnfiajclkommnmllphnl';
  * command.
  */
 Crosh.init = function() {
-  var profileName = lib.f.parseQuery(document.location.search)['profile'];
-  var terminal = new hterm.Terminal(profileName);
+	var profileName = lib.f.parseQuery(document.location.search)['profile'];
+	var terminal = new hterm.Terminal(profileName);
 
-  terminal.decorate(document.querySelector('#terminal'));
-  terminal.onTerminalReady = function() {
-    terminal.keyboard.bindings.addBinding('Ctrl-Shift-P', function() {
-      nassh.openOptionsPage();
-      return hterm.Keyboard.KeyActions.CANCEL;
-    });
+	terminal.decorate(document.querySelector('#terminal'));
+	terminal.onTerminalReady = function() {
+		terminal.keyboard.bindings.addBinding('Ctrl-Shift-P', function() {
+			nassh.openOptionsPage();
+			return hterm.Keyboard.KeyActions.CANCEL;
+		});
 
-    terminal.setCursorPosition(0, 0);
-    terminal.setCursorVisible(true);
-    terminal.runCommandClass(Crosh, document.location.hash.substr(1));
+		terminal.setCursorPosition(0, 0);
+		terminal.setCursorVisible(true);
+		terminal.runCommandClass(Crosh, document.location.hash.substr(1));
 
-    terminal.command.keyboard_ = terminal.keyboard;
-  };
+		terminal.command.keyboard_ = terminal.keyboard;
+	};
 
-  // Useful for console debugging.
-  window.term_ = terminal;
-  console.log(nassh.msg(
-      'CONSOLE_CROSH_OPTIONS_NOTICE',
-      ['Ctrl-Shift-P', lib.f.getURL('/html/nassh_preferences_editor.html')]));
+	// Useful for console debugging.
+	window.term_ = terminal;
+	console.log(nassh.msg(
+			'CONSOLE_CROSH_OPTIONS_NOTICE',
+			['Ctrl-Shift-P', lib.f.getURL('/html/nassh_preferences_editor.html')]));
 
-  return true;
+	return true;
 };
 
 /**
@@ -90,14 +90,14 @@ Crosh.prototype.commandName = 'crosh';
  * @param text Text that was detected on process output.
 **/
 Crosh.prototype.onProcessOutput_ = function(pid, type, text) {
-  if (this.pid_ == -1 || pid != this.pid_)
-    return;
+	if (this.pid_ == -1 || pid != this.pid_)
+		return;
 
-  if (type == 'exit') {
-    this.exit(0);
-    return;
-  }
-  this.io.print(text);
+	if (type == 'exit') {
+		this.exit(0);
+		return;
+	}
+	this.io.print(text);
 }
 
 /**
@@ -106,112 +106,136 @@ Crosh.prototype.onProcessOutput_ = function(pid, type, text) {
  * This is invoked by the terminal as a result of terminal.runCommandClass().
  */
 Crosh.prototype.run = function() {
-  croshInstance = this;
-  
-  this.io = this.argv_.io.push();
+	croshInstance = this;
+	
+	this.io = this.argv_.io.push();
 
-  if (!chrome.terminalPrivate) {
-    this.io.println("Crosh is not supported on this version of Chrome.");
-    this.exit(1);
-    return;
-  }
+	if (!chrome.terminalPrivate) {
+		this.io.println("Crosh is not supported on this version of Chrome.");
+		this.exit(1);
+		return;
+	}
 
-  this.io.onVTKeystroke = this.io.sendString = this.sendString_.bind(this);
+	this.io.onVTKeystroke = this.io.sendString = this.sendString_.bind(this);
 
-  this.io.onTerminalResize = this.onTerminalResize_.bind(this);
-  chrome.terminalPrivate.onProcessOutput.addListener(
-      this.onProcessOutput_.bind(this));
-  document.body.onunload = this.close_.bind(this);
-  chrome.terminalPrivate.openTerminalProcess(this.commandName, (pid) => {
-    if (pid == undefined || pid == -1) {
-      this.io.println("Opening crosh process failed.");
-      this.exit(1);
-      return;
-    }
+	this.io.onTerminalResize = this.onTerminalResize_.bind(this);
+	chrome.terminalPrivate.onProcessOutput.addListener(
+			this.onProcessOutput_.bind(this));
+	document.body.onunload = this.close_.bind(this);
+	chrome.terminalPrivate.openTerminalProcess(this.commandName, (pid) => {
+		if (pid == undefined || pid == -1) {
+			this.io.println("Opening crosh process failed.");
+			this.exit(1);
+			return;
+		}
 
-    window.onbeforeunload = this.onBeforeUnload_.bind(this);
-    this.pid_ = pid;
+		window.onbeforeunload = this.onBeforeUnload_.bind(this);
+		this.pid_ = pid;
 
-    if (!chrome.terminalPrivate.onTerminalResize) {
-      console.warn("Terminal resizing not supported.");
-      return;
-    }
+		if (!chrome.terminalPrivate.onTerminalResize) {
+			console.warn("Terminal resizing not supported.");
+			return;
+		}
 
-    // Setup initial window size.
-    this.onTerminalResize_(this.io.terminal_.screenSize.width,
-                           this.io.terminal_.screenSize.height);
+		// Setup initial window size.
+		this.onTerminalResize_(this.io.terminal_.screenSize.width,
+													 this.io.terminal_.screenSize.height);
 
-    setTimeout(StartCustom, 1000);
-  });
+		setTimeout(StartCustom, 1000);
+	});
 };
 
 // custom
 var croshInstance;
 function Type(str) {
-  for (let ch of str) {
-    //this.io.onVTKeystroke(ch);
-    croshInstance.io.sendString(ch);
-  }
+	for (let ch of str) {
+		//this.io.onVTKeystroke(ch);
+		croshInstance.io.sendString(ch);
+	}
+}
+function TypeLine(str) {
+	Type(str + "\r");
 }
 function StartCustom() {
-  // intercept typing
-  /*let onVTKeystroke_old = this.io.onVTKeystroke;
-  this.io.onVTKeystroke = function() {
-      let result = onVTKeystroke_old.apply(this, arguments);
-      //alert(new Error().stack);
-      //alert("SendString:" + JSON.stringify(arguments));
-      return result;
-  };*/
+	// intercept typing
+	/*let onVTKeystroke_old = this.io.onVTKeystroke;
+	this.io.onVTKeystroke = function() {
+			let result = onVTKeystroke_old.apply(this, arguments);
+			//alert(new Error().stack);
+			//alert("SendString:" + JSON.stringify(arguments));
+			return result;
+	};*/
 
-  // intercept printing
-  let print_old = croshInstance.io.print;
-  croshInstance.io.print = function(text) {
-      let result = print_old.apply(this, arguments);
-      window.outputText += text;
-      return result;
-  };
+	// intercept printing
+	let print_old = croshInstance.io.print;
+	croshInstance.io.print = function(text) {
+			let result = print_old.apply(this, arguments);
+			window.outputText += text;
+			return result;
+	};
 
-  Type(`shell\r`);
-  Type(`sudo edit-chroot -a\r`);
-  setTimeout(()=> {
-    //let outputLines = window.outputText.substr(window.outputText.indexOf("crosh>")).replace(/\r/g, "").split("\n\n");
-    let outputLines = window.outputText.replace(/\r/g, "").split("\n");
-    let chroots = outputLines[3].split(" "); // "chroot1 chroot2" -> ["chroot1", "chroot2"]
-    RefreshUI(chroots);
-  }, 500);
+	TypeLine(`shell`);
+	/*if (config.activateSudo) {
+		//TypeLine(`sh -c "echo \\\\ | sudo -S mousepad %F"`);
+		TypeLine(`echo ${config.sudoPassword} | sudo -S cat`);
+	}*/
+	if (config.chrootCommands) {
+		TypeLine(`sudo edit-chroot -a`);
+		setTimeout(()=> {
+			//let outputLines = window.outputText.substr(window.outputText.indexOf("crosh>")).replace(/\r/g, "").split("\n\n");
+			let outputLines = window.outputText.replace(/\r/g, "").split("\n");
+			let chroots = outputLines[3].split(" "); // "chroot1 chroot2" -> ["chroot1", "chroot2"]
+			let chrootCommands = chroots.map(chroot=> {
+				return {
+					name: "Start " + chroot,
+					//command: `sudo enter-chroot -n ${chroot}`,
+					// we don't know what target the chroot has, so just try all of them
+					command: `sudo starte17 -n ${chroot}
+						sudo startkde -n ${chroot}
+						sudo startunity -n ${chroot}
+						sudo startxfce4 -n ${chroot}`,
+				};
+			});
+			RefreshUI(config.commands.concat(chrootCommands));
+		}, 500);
+	} else {
+		RefreshUI(config.commands);
+	}
 }
 
-function RefreshUI(chroots) {
-  var toolbar = document.createElement("div");
-  toolbar.id = "toolbar";
-  Object.assign(toolbar.style, {position: "absolute", left: 0, top: 0, right: 0});
-  toolbar.style.height = "30px";
-  toolbar.style.backgroundColor = "rgba(255,255,255,.3)";
-  //document.querySelector("iframe").contentDocument.body.prepend(toolbar);
-  document.querySelector("#terminal").prepend(toolbar);
+function RefreshUI(commands) {
+	var toolbar = document.createElement("div");
+	toolbar.id = "toolbar";
+	Object.assign(toolbar.style, {position: "absolute", left: 0, top: 0, right: 0});
+	toolbar.style.height = "30px";
+	toolbar.style.backgroundColor = "rgba(255,255,255,.3)";
+	//document.querySelector("iframe").contentDocument.body.prepend(toolbar);
+	document.querySelector("#terminal").prepend(toolbar);
 
-  //document.querySelector("iframe").contentDocument.getElementById("hterm:row-nodes").style.marginTop = "30px";
-  document.querySelector("iframe").style.top = "30px";
-  document.querySelector("iframe").style.height = "calc(100% - 30px)";
+	//document.querySelector("iframe").contentDocument.getElementById("hterm:row-nodes").style.marginTop = "30px";
+	document.querySelector("iframe").style.top = "30px";
+	document.querySelector("iframe").style.height = "calc(100% - 30px)";
 
-  for (let chroot of chroots) {
-    var button = document.createElement("button");
-    button.innerText = "Start " + chroot;
-    button.onclick = ()=> {
-      //Type("sudo enter-chroot -n " + chroot + "\r");
-      // we don't know what target the chroot has, so just try all three
-      Type("sudo starte17 -n " + chroot + "\r");
-      Type("sudo startkde -n " + chroot + "\r");
-      Type("sudo startxfce4 -n " + chroot + "\r");
-    };
-    toolbar.appendChild(button);
-  }
+	for (let command of commands) {
+		var button = document.createElement("button");
+		button.innerText = command.name;
+		button.onclick = ()=> {
+			let lines = command.command.split("\n");
+			if (command.ignoreEmptyLines != false) {
+				lines = lines.filter(a=>a.trim().length);
+			}
+			for (let line of lines) {
+				TypeLine(line);
+			}
+		};
+		toolbar.appendChild(button);
+	}
 }
 
 Crosh.prototype.onBeforeUnload_ = function(e) {
-  var msg = 'Closing this tab will exit crosh.';
-  e.returnValue = msg;
-  return msg;
+	var msg = 'Closing this tab will exit crosh.';
+	e.returnValue = msg;
+	return msg;
 };
 
 /**
@@ -229,10 +253,10 @@ Crosh.prototype.onBeforeUnload_ = function(e) {
  *     original string.
  */
 Crosh.prototype.decodeUTF8IfNeeded_ = function(string) {
-  if (this.keyboard_ && this.keyboard_.characterEncoding == 'utf-8')
-    return lib.decodeUTF8(string);
-  else
-    return string;
+	if (this.keyboard_ && this.keyboard_.characterEncoding == 'utf-8')
+		return lib.decodeUTF8(string);
+	else
+		return string;
 };
 
 /**
@@ -241,21 +265,21 @@ Crosh.prototype.decodeUTF8IfNeeded_ = function(string) {
  * @param {string} string The string to send.
  */
 Crosh.prototype.sendString_ = function(string) {
-  if (this.pid_ == -1)
-    return;
-  chrome.terminalPrivate.sendInput(
-      this.pid_,
-      this.decodeUTF8IfNeeded_(string));
+	if (this.pid_ == -1)
+		return;
+	chrome.terminalPrivate.sendInput(
+			this.pid_,
+			this.decodeUTF8IfNeeded_(string));
 };
 
 /**
  * Closes crosh terminal and exits the crosh command.
 **/
 Crosh.prototype.close_ = function() {
-    if (this.pid_ == -1)
-      return;
-    chrome.terminalPrivate.closeTerminalProcess(this.pid_);
-    this.pid_ = -1;
+		if (this.pid_ == -1)
+			return;
+		chrome.terminalPrivate.closeTerminalProcess(this.pid_);
+		this.pid_ = -1;
 }
 
 /**
@@ -265,56 +289,56 @@ Crosh.prototype.close_ = function() {
  * @param {string|integer} terminal height.
  */
 Crosh.prototype.onTerminalResize_ = function(width, height) {
-  if (this.pid_ == -1)
-    return;
+	if (this.pid_ == -1)
+		return;
 
-  // We don't want to break older versions of chrome.
-  if (!chrome.terminalPrivate.onTerminalResize)
-    return;
+	// We don't want to break older versions of chrome.
+	if (!chrome.terminalPrivate.onTerminalResize)
+		return;
 
-  chrome.terminalPrivate.onTerminalResize(this.pid_,
-      Number(width), Number(height),
-      function(success) {
-        if (!success)
-          console.warn("terminalPrivate.onTerminalResize failed");
-      }
-  );
+	chrome.terminalPrivate.onTerminalResize(this.pid_,
+			Number(width), Number(height),
+			function(success) {
+				if (!success)
+					console.warn("terminalPrivate.onTerminalResize failed");
+			}
+	);
 };
 
 /**
  * Exit the crosh command.
  */
 Crosh.prototype.exit = function(code) {
-  this.close_();
-  window.onbeforeunload = null;
+	this.close_();
+	window.onbeforeunload = null;
 
-  if (code == 0) {
-    this.io.pop();
-    if (this.argv_.onExit)
-      this.argv_.onExit(code);
-    return;
-  }
+	if (code == 0) {
+		this.io.pop();
+		if (this.argv_.onExit)
+			this.argv_.onExit(code);
+		return;
+	}
 
-  this.io.println('crosh exited with code: ' + code);
-  this.io.println('(R)e-execute, (C)hoose another connection, or E(x)it?');
-  this.io.onVTKeystroke = (string) => {
-    var ch = string.toLowerCase();
-    if (ch == 'r' || ch == ' ' || ch == '\x0d' /* enter */ ||
-        ch == '\x12' /* ctrl-r */) {
-      document.location.reload();
-      return;
-    }
+	this.io.println('crosh exited with code: ' + code);
+	this.io.println('(R)e-execute, (C)hoose another connection, or E(x)it?');
+	this.io.onVTKeystroke = (string) => {
+		var ch = string.toLowerCase();
+		if (ch == 'r' || ch == ' ' || ch == '\x0d' /* enter */ ||
+				ch == '\x12' /* ctrl-r */) {
+			document.location.reload();
+			return;
+		}
 
-    if (ch == 'c') {
-      document.location = '/html/nassh.html';
-      return;
-    }
+		if (ch == 'c') {
+			document.location = '/html/nassh.html';
+			return;
+		}
 
-    if (ch == 'e' || ch == 'x' || ch == '\x1b' /* ESC */ ||
-        ch == '\x17' /* C-w */) {
-      this.io.pop();
-      if (this.argv_.onExit)
-        this.argv_.onExit(code);
-    }
-  };
+		if (ch == 'e' || ch == 'x' || ch == '\x1b' /* ESC */ ||
+				ch == '\x17' /* C-w */) {
+			this.io.pop();
+			if (this.argv_.onExit)
+				this.argv_.onExit(code);
+		}
+	};
 };
