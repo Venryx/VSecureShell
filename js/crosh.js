@@ -218,6 +218,11 @@ function RefreshUI(commands) {
 
 	for (let command of commands) {
 		var button = document.createElement("button");
+		button.onfocus = e=> {
+			//e.preventDefault();
+			//return false;
+			document.querySelector("iframe").focus();
+		};
 		button.innerText = command.name;
 		button.onclick = ()=> {
 			let lines = command.command.split("\n");
