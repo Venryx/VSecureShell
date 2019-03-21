@@ -18,5 +18,10 @@ ${chromebookID == 0
     : `sudo /home/davey/.nvm/versions/node/v9.2.0/bin/node "/home/davey/Downloads/Root/Apps/Games/InputAssistant/Main.js"`}
 `
         },
+        {name: "Share root", command: "sudo mount --bind / /run/crouton/mnt/stateful_partition/crouton/chroots/xenial/OuterRoot"},
+        {name: "Sleep", command: "powerd_dbus_suspend"},
+        {name: "Restart Android", command: "sudo pkill -x main"},
+        {name: "Restart ChromeOS", command: "sudo pkill -x chrome"},
+        //{name: "Restart touch-system", command: "sudo pkill -x surfaceflinger"},
     ],
 };
